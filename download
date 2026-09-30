@@ -1,0 +1,9 @@
+node_modules/
+.env
+*.env
+service-account*.json
+android/.gradle/
+android/app/build/
+android/build/
+apps/*/dist/
+.DS_Store
