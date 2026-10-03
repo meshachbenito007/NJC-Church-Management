@@ -1,0 +1,17 @@
+{
+  "name": "njc-church-android",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf dist && mkdir -p dist && cp -r src/* dist/",
+    "cap:sync": "npm run build && npx cap sync android",
+    "cap:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/android": "^7.4.3"
+  }
+}
