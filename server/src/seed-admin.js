@@ -1,0 +1,2 @@
+const bcrypt=require('bcryptjs');const pool=require('./db');
+(async()=>{const password=process.env.ADMIN_PASSWORD||'Admin@123';const hash=await bcrypt.hash(password,10);await pool.query('INSERT INTO admins(username,password_hash,role) VALUES(?,?,?) ON DUPLICATE KEY UPDATE password_hash=VALUES(password_hash),role=VALUES(role)',['admin',hash,'super_admin']);console.log('Admin seeded: admin / '+password);await pool.end()})().catch(e=>{console.error(e);process.exit(1)})
