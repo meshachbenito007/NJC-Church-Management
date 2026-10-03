@@ -560,10 +560,6 @@ app.get(
 
 
 /* ==========================================================================
-   MEMBER AUTH
-========================================================================== */
-
-/* ==========================================================================
    COMBINED MOBILE + OTP AUTH
 ========================================================================== */
 
@@ -571,48 +567,63 @@ app.post(
   '/api/auth/request-otp',
   async (req, res) => {
 
-    const mobile =
-      String(req.body.mobile || '').trim();
+    try {
 
-    if (!mobile) {
-      return res.status(400).json({
-        message: 'Mobile required'
+      const mobile =
+        String(req.body.mobile || '').trim();
+
+      if (!mobile) {
+        return res.status(400).json({
+          message: 'Mobile required'
+        });
+      }
+
+      const members = await safe(
+        `
+          SELECT id
+          FROM members
+          WHERE mobile=?
+            AND status='active'
+          LIMIT 1
+        `,
+        [mobile]
+      );
+
+      const admins = await safe(
+        `
+          SELECT id
+          FROM admins
+          WHERE mobile=?
+          LIMIT 1
+        `,
+        [mobile]
+      );
+
+      if (!members.length && !admins.length) {
+        return res.status(404).json({
+          message: 'Mobile number is not registered'
+        });
+      }
+
+      issueOtp(mobile);
+
+      res.json({
+        message: 'OTP sent'
       });
+
+    } catch (e) {
+
+      console.error(
+        'POST /api/auth/request-otp error:',
+        e
+      );
+
+      res.status(500).json({
+        message: e.message
+      });
+
     }
 
-    const members = await safe(
-      `
-        SELECT id
-        FROM members
-        WHERE mobile=?
-          AND status='active'
-        LIMIT 1
-      `,
-      [mobile]
-    );
-
-    const admins = await safe(
-      `
-        SELECT id
-        FROM admins
-        WHERE mobile=?
-          AND status='active'
-        LIMIT 1
-      `,
-      [mobile]
-    );
-
-    if (!members.length && !admins.length) {
-      return res.status(404).json({
-        message: 'Mobile number is not registered'
-      });
-    }
-
-    issueOtp(mobile);
-
-    res.json({
-      message: 'OTP sent'
-    });
   }
 );
 
@@ -621,154 +632,165 @@ app.post(
   '/api/auth/verify-otp',
   async (req, res) => {
 
-    const mobile =
-      String(req.body.mobile || '').trim();
+    try {
 
-    const otp =
-      String(req.body.otp || '').trim();
+      const mobile =
+        String(req.body.mobile || '').trim();
 
-    if (!mobile || !otp) {
-      return res.status(400).json({
-        message: 'Mobile and OTP required'
-      });
-    }
+      const otp =
+        String(req.body.otp || '').trim();
 
-    if (!verifyOtp(mobile, otp)) {
-      return res.status(400).json({
-        message: 'Invalid or expired OTP'
-      });
-    }
+      if (!mobile || !otp) {
+        return res.status(400).json({
+          message: 'Mobile and OTP required'
+        });
+      }
 
-    const members = await safe(
-      `
-        SELECT *
-        FROM members
-        WHERE mobile=?
-          AND status='active'
-        LIMIT 1
-      `,
-      [mobile]
-    );
+      if (!verifyOtp(mobile, otp)) {
+        return res.status(400).json({
+          message: 'Invalid or expired OTP'
+        });
+      }
 
-    const admins = await safe(
-      `
-        SELECT
-          id,
-          name,
-          mobile,
-          email,
-          role,
-          status,
-          created_at,
-          updated_at
-        FROM admins
-        WHERE mobile=?
-          AND status='active'
-        LIMIT 1
-      `,
-      [mobile]
-    );
+      const members = await safe(
+        `
+          SELECT *
+          FROM members
+          WHERE mobile=?
+            AND status='active'
+          LIMIT 1
+        `,
+        [mobile]
+      );
 
-    const hasMember =
-      members.length > 0;
+      const admins = await safe(
+        `
+          SELECT *
+          FROM admins
+          WHERE mobile=?
+          LIMIT 1
+        `,
+        [mobile]
+      );
 
-    const hasAdmin =
-      admins.length > 0;
+      const hasMember =
+        members.length > 0;
 
-    if (!hasMember && !hasAdmin) {
-      return res.status(404).json({
-        message: 'No active account found'
-      });
-    }
+      const hasAdmin =
+        admins.length > 0;
 
-    /* ---------------------------------------------------------------
-       MEMBER + ADMIN
-    ---------------------------------------------------------------- */
+      if (!hasMember && !hasAdmin) {
+        return res.status(404).json({
+          message: 'No active account found'
+        });
+      }
 
-    if (hasMember && hasAdmin) {
+      /*
+       * The same mobile number exists in both tables.
+       * Do not issue an account token yet.
+       * Ask the user to choose Member or Admin.
+       */
 
-      const selectionToken =
-        jwt.sign(
-          {
-            mobile,
-            purpose: 'role-selection'
-          },
-          secret(),
-          {
-            expiresIn: '10m'
-          }
-        );
+      if (hasMember && hasAdmin) {
 
-      return res.json({
+        const selectionToken =
+          jwt.sign(
+            {
+              mobile,
+              purpose: 'role-selection'
+            },
+            secret(),
+            {
+              expiresIn: '10m'
+            }
+          );
 
-        requiresRoleSelection: true,
+        return res.json({
 
-        selectionToken,
+          requiresRoleSelection: true,
 
-        accounts: [
-          {
-            role: 'member',
-            name:
-              members[0].full_name ||
-              members[0].name ||
-              'Member'
-          },
-          {
-            role: 'admin',
-            name:
-              admins[0].name ||
-              'Admin'
-          }
-        ]
+          selectionToken,
 
-      });
-    }
+          accounts: [
+            {
+              role: 'member',
+              name:
+                members[0].full_name ||
+                'Member'
+            },
+            {
+              role: 'admin',
+              name:
+                admins[0].username ||
+                admins[0].name ||
+                'Admin'
+            }
+          ]
 
-    /* ---------------------------------------------------------------
-       MEMBER ONLY
-    ---------------------------------------------------------------- */
+        });
 
-    if (hasMember) {
+      }
+
+      /*
+       * Member only
+       */
+
+      if (hasMember) {
+
+        return res.json({
+
+          requiresRoleSelection: false,
+
+          role: 'member',
+
+          token:
+            sign({
+              id: members[0].id,
+              role: 'member'
+            }),
+
+          member:
+            members[0]
+
+        });
+
+      }
+
+      /*
+       * Admin only
+       */
 
       return res.json({
 
         requiresRoleSelection: false,
 
-        role: 'member',
+        role: 'admin',
 
         token:
           sign({
-            id: members[0].id,
-            role: 'member'
+            id: admins[0].id,
+            role:
+              admins[0].role ||
+              'admin'
           }),
 
-        member:
-          members[0]
+        admin:
+          admins[0]
 
       });
+
+    } catch (e) {
+
+      console.error(
+        'POST /api/auth/verify-otp error:',
+        e
+      );
+
+      res.status(500).json({
+        message: e.message
+      });
+
     }
-
-    /* ---------------------------------------------------------------
-       ADMIN ONLY
-    ---------------------------------------------------------------- */
-
-    return res.json({
-
-      requiresRoleSelection: false,
-
-      role: 'admin',
-
-      token:
-        sign({
-          id: admins[0].id,
-          role:
-            admins[0].role ||
-            'admin'
-        }),
-
-      admin: admins[0]
-
-    });
 
   }
 );
@@ -782,72 +804,113 @@ app.post(
   '/api/auth/select-role',
   async (req, res) => {
 
-    const {
-      selectionToken,
-      role
-    } = req.body;
-
-    if (!selectionToken || !role) {
-      return res.status(400).json({
-        message:
-          'Selection token and role required'
-      });
-    }
-
-    if (
-      role !== 'member' &&
-      role !== 'admin'
-    ) {
-      return res.status(400).json({
-        message: 'Invalid role'
-      });
-    }
-
-    let selection;
-
     try {
 
-      selection =
-        jwt.verify(
-          selectionToken,
-          secret()
-        );
+      const {
+        selectionToken,
+        role
+      } = req.body;
 
-    } catch {
+      if (!selectionToken || !role) {
+        return res.status(400).json({
+          message:
+            'Selection token and role required'
+        });
+      }
 
-      return res.status(401).json({
-        message:
-          'Selection session expired'
-      });
+      if (
+        role !== 'member' &&
+        role !== 'admin'
+      ) {
+        return res.status(400).json({
+          message: 'Invalid role'
+        });
+      }
 
-    }
+      let selection;
 
-    if (
-      selection.purpose !==
-      'role-selection'
-    ) {
-      return res.status(401).json({
-        message:
-          'Invalid selection session'
-      });
-    }
+      try {
 
-    const mobile =
-      selection.mobile;
+        selection =
+          jwt.verify(
+            selectionToken,
+            secret()
+          );
 
-    /* ---------------------------------------------------------------
-       MEMBER
-    ---------------------------------------------------------------- */
+      } catch {
 
-    if (role === 'member') {
+        return res.status(401).json({
+          message:
+            'Selection session expired'
+        });
+
+      }
+
+      if (
+        selection.purpose !==
+        'role-selection'
+      ) {
+        return res.status(401).json({
+          message:
+            'Invalid selection session'
+        });
+      }
+
+      const mobile =
+        selection.mobile;
+
+      /*
+       * Member
+       */
+
+      if (role === 'member') {
+
+        const rows =
+          await safe(
+            `
+              SELECT *
+              FROM members
+              WHERE mobile=?
+                AND status='active'
+              LIMIT 1
+            `,
+            [mobile]
+          );
+
+        if (!rows.length) {
+          return res.status(404).json({
+            message:
+              'Member account not found'
+          });
+        }
+
+        return res.json({
+
+          role: 'member',
+
+          token:
+            sign({
+              id: rows[0].id,
+              role: 'member'
+            }),
+
+          member:
+            rows[0]
+
+        });
+
+      }
+
+      /*
+       * Admin
+       */
 
       const rows =
         await safe(
           `
             SELECT *
-            FROM members
+            FROM admins
             WHERE mobile=?
-              AND status='active'
             LIMIT 1
           `,
           [mobile]
@@ -856,76 +919,47 @@ app.post(
       if (!rows.length) {
         return res.status(404).json({
           message:
-            'Member account not found'
+            'Admin account not found'
         });
       }
 
       return res.json({
 
-        role: 'member',
+        role: 'admin',
 
         token:
           sign({
             id: rows[0].id,
-            role: 'member'
+            role:
+              rows[0].role ||
+              'admin'
           }),
 
-        member:
+        admin:
           rows[0]
 
       });
-    }
 
-    /* ---------------------------------------------------------------
-       ADMIN
-    ---------------------------------------------------------------- */
+    } catch (e) {
 
-    const rows =
-      await safe(
-        `
-          SELECT
-            id,
-            name,
-            mobile,
-            email,
-            role,
-            status,
-            created_at,
-            updated_at
-          FROM admins
-          WHERE mobile=?
-            AND status='active'
-          LIMIT 1
-        `,
-        [mobile]
+      console.error(
+        'POST /api/auth/select-role error:',
+        e
       );
 
-    if (!rows.length) {
-      return res.status(404).json({
-        message:
-          'Admin account not found'
+      res.status(500).json({
+        message: e.message
       });
+
     }
-
-    return res.json({
-
-      role: 'admin',
-
-      token:
-        sign({
-          id: rows[0].id,
-          role:
-            rows[0].role ||
-            'admin'
-        }),
-
-      admin:
-        rows[0]
-
-    });
 
   }
 );
+
+
+/* ==========================================================================
+   LEGACY MEMBER REGISTRATION
+========================================================================== */
 
 app.post(
   '/api/auth/member/register',
@@ -1036,7 +1070,9 @@ app.post(
 
 
 /* ==========================================================================
-   ADMIN LOGIN
+   LEGACY ADMIN LOGIN
+   Mobile + OTP is now the primary admin authentication.
+   This endpoint is retained only so old clients receive a clear message.
 ========================================================================== */
 
 app.post(
@@ -1046,82 +1082,9 @@ app.post(
     res
   ) => {
 
-    const {
-      username,
-      password
-    } = req.body;
-
-    const rows =
-      await safe(
-        `
-          SELECT *
-          FROM admins
-          WHERE username=?
-          LIMIT 1
-        `,
-        [username]
-      );
-
-    if (
-      !rows.length &&
-      username === 'admin' &&
-      password === 'Admin@123'
-    ) {
-
-      return res.json({
-
-        token:
-          sign({
-            id: 0,
-            role: 'super_admin'
-          }),
-
-        admin: {
-
-          id: 0,
-          username: 'admin',
-          role: 'super_admin',
-          development: true
-
-        }
-
-      });
-
-    }
-
-    if (
-      !rows.length ||
-      !(
-        await bcrypt.compare(
-          password,
-          rows[0].password_hash
-        )
-      )
-    ) {
-
-      return res.status(401).json({
-        message:
-          'Invalid credentials'
-      });
-
-    }
-
-    res.json({
-
-      token:
-        sign({
-          id: rows[0].id,
-          role: rows[0].role
-        }),
-
-      admin: {
-
-        id: rows[0].id,
-        username: rows[0].username,
-        role: rows[0].role
-
-      }
-
+    return res.status(410).json({
+      message:
+        'Admin username/password login has been replaced by mobile OTP login.'
     });
 
   }
@@ -1131,108 +1094,6 @@ app.post(
 /* ==========================================================================
    DASHBOARD
 ========================================================================== */
-
-app.get(
-  '/api/dashboard',
-  auth,
-  admin,
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      const [
-        [m],
-        [e],
-        [p],
-        [x]
-      ] =
-        await Promise.all([
-
-          safe(
-            `
-              SELECT COUNT(*) c
-              FROM members
-              WHERE status="active"
-            `
-          ),
-
-          safe(
-            `
-              SELECT COUNT(*) c
-              FROM events
-              WHERE status="published"
-            `
-          ),
-
-          safe(
-            `
-              SELECT COUNT(*) c
-              FROM prayer_requests
-              WHERE status<>"completed"
-            `
-          ),
-
-          safe(
-            `
-              SELECT
-                COALESCE(
-                  SUM(amount),
-                  0
-                ) total
-              FROM expenses
-            `
-          )
-
-        ]);
-
-      const settings =
-        await safe(
-          `
-            SELECT starting_balance
-            FROM finance_settings
-            LIMIT 1
-          `
-        );
-
-      const startingBalance =
-        Number(
-          settings[0]?.starting_balance || 0
-        );
-
-      res.json({
-
-        members:
-          Number(m.c),
-
-        events:
-          Number(e.c),
-
-        pending_prayers:
-          Number(p.c),
-
-        total_expenses:
-          Number(x.total),
-
-        current_balance:
-          startingBalance -
-          Number(x.total)
-
-      });
-
-    } catch (e) {
-
-      res.status(500).json({
-        message: e.message
-      });
-
-    }
-
-  }
-);
-
 
 /* ==========================================================================
    MEMBERS
