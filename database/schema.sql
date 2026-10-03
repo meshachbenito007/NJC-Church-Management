@@ -1,3 +1,5 @@
+USE church_management;
+
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
@@ -7,9 +9,7 @@
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -30,17 +30,15 @@ SET time_zone = "+00:00";
 CREATE TABLE `admins` (
   `id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
+  `mobile` varchar(30) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
   `role` enum('super_admin','pastor','church_admin','finance_admin','event_manager','content_manager') NOT NULL DEFAULT 'church_admin',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 --
 -- Dumping data for table `admins`
 --
-
-INSERT INTO `admins` (`id`, `username`, `password_hash`, `role`, `created_at`) VALUES
-(1, 'beni', 'Njc_2002', 'church_admin', '2026-09-03 14:42:15');
 
 -- --------------------------------------------------------
 
@@ -54,7 +52,7 @@ CREATE TABLE `announcements` (
   `body` text DEFAULT NULL,
   `status` varchar(30) DEFAULT 'published',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -68,7 +66,7 @@ CREATE TABLE `bible_verses` (
   `verse_text` text NOT NULL,
   `status` varchar(30) DEFAULT 'published',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -87,7 +85,7 @@ CREATE TABLE `church_information` (
   `map_url` varchar(500) DEFAULT NULL,
   `status` varchar(30) DEFAULT 'published',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -105,7 +103,7 @@ CREATE TABLE `events` (
   `banner_file_id` varchar(200) DEFAULT NULL,
   `status` varchar(30) DEFAULT 'published',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -124,14 +122,11 @@ CREATE TABLE `expenses` (
   `receipt_file_id` varchar(200) DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 --
 -- Dumping data for table `expenses`
 --
-
-INSERT INTO `expenses` (`id`, `title`, `amount`, `expense_date`, `category`, `description`, `paid_by`, `receipt_file_id`, `notes`, `created_at`) VALUES
-(1, 'Electric bill', 2500.00, '2026-09-04', 'Electricity', 'Church electricity bill', 'mesh', NULL, NULL, '2026-09-04 00:36:15');
 
 -- --------------------------------------------------------
 
@@ -143,7 +138,7 @@ CREATE TABLE `families` (
   `id` int(11) NOT NULL,
   `family_name` varchar(150) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -156,7 +151,7 @@ CREATE TABLE `family_members` (
   `family_id` int(11) DEFAULT NULL,
   `member_id` int(11) DEFAULT NULL,
   `relationship` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -167,14 +162,11 @@ CREATE TABLE `family_members` (
 CREATE TABLE `finance_settings` (
   `id` int(11) NOT NULL DEFAULT 1,
   `starting_balance` decimal(12,2) NOT NULL DEFAULT 0.00
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 --
 -- Dumping data for table `finance_settings`
 --
-
-INSERT INTO `finance_settings` (`id`, `starting_balance`) VALUES
-(1, 50000.00);
 
 -- --------------------------------------------------------
 
@@ -189,7 +181,7 @@ CREATE TABLE `gallery` (
   `file_id` varchar(200) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` varchar(30) DEFAULT 'published'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -221,14 +213,11 @@ CREATE TABLE `members` (
   `status` enum('active','inactive') DEFAULT 'active',
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 --
 -- Dumping data for table `members`
 --
-
-INSERT INTO `members` (`id`, `member_id`, `full_name`, `mobile`, `dob`, `sex`, `address`, `house_no`, `street`, `area`, `city`, `district`, `state`, `pin`, `latitude`, `longitude`, `profile_file_id`, `family_id`, `ministry`, `date_joined`, `status`, `notes`, `created_at`) VALUES
-(1, 'NJC-81763770', 'Meshach Benito', '8270438778', '2002-12-11', 'Male', 'xxxxxx, pilliyar kovil street, medavakkam, medavakkam, chennai, Tamil Nadu, 600100', 'xxxxxx', 'pilliyar kovil street', 'medavakkam', 'medavakkam', 'chennai', 'Tamil Nadu', '600100', NULL, NULL, NULL, NULL, NULL, NULL, 'active', NULL, '2026-09-04 00:29:23');
 
 -- --------------------------------------------------------
 
@@ -243,7 +232,7 @@ CREATE TABLE `ministries` (
   `leader` varchar(200) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` varchar(30) DEFAULT 'published'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -258,7 +247,7 @@ CREATE TABLE `notifications` (
   `target_group` varchar(100) DEFAULT 'everyone',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` varchar(30) DEFAULT 'published'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -276,14 +265,11 @@ CREATE TABLE `prayer_requests` (
   `assigned_to` varchar(150) DEFAULT NULL,
   `response_text` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 --
 -- Dumping data for table `prayer_requests`
 --
-
-INSERT INTO `prayer_requests` (`id`, `member_id`, `title`, `request_text`, `is_anonymous`, `status`, `assigned_to`, `response_text`, `created_at`) VALUES
-(1, 1, 'Thanks giving', '', 0, 'new', NULL, NULL, '2026-09-04 00:34:17');
 
 -- --------------------------------------------------------
 
@@ -302,7 +288,7 @@ CREATE TABLE `sermons` (
   `image_file_id` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` varchar(30) DEFAULT 'published'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -320,7 +306,7 @@ CREATE TABLE `service_schedule` (
   `description` text DEFAULT NULL,
   `status` varchar(30) DEFAULT 'published',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -336,7 +322,7 @@ CREATE TABLE `worship_songs` (
   `audio_file_id` varchar(200) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` varchar(30) DEFAULT 'published'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+);
 
 --
 -- Indexes for dumped tables
@@ -347,7 +333,8 @@ CREATE TABLE `worship_songs` (
 --
 ALTER TABLE `admins`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`);
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `mobile` (`mobile`);
 
 --
 -- Indexes for table `announcements`
@@ -573,7 +560,7 @@ ALTER TABLE `members`
 --
 ALTER TABLE `prayer_requests`
   ADD CONSTRAINT `prayer_requests_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON DELETE SET NULL;
-COMMIT;
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
