@@ -1,0 +1,1 @@
+{"name":"church-admin-panel","version":"1.0.0","private":true,"scripts":{"start":"npx serve src -l 4300"},"devDependencies":{"serve":"^14.2.4"}}
