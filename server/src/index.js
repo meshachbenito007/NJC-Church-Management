@@ -5685,11 +5685,12 @@ async function ensureContentSchema() {
     `SELECT id FROM finance_settings LIMIT 1`
   );
 
-  if (!financeRows.length) {
-    await safe(
-      `INSERT INTO finance_settings(starting_balance) VALUES(0)`
-    );
-  }
+ if (!financeRows.length) {
+  await safe(
+    `INSERT INTO finance_settings(setting_name, starting_balance)
+     VALUES('starting_balance', 0)`
+  );
+}
 
 
   console.log(
