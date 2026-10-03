@@ -1,0 +1,105 @@
+/* =========================================================
+   NJC ADMIN PANEL — GLASSMORPHISM UI
+========================================================= */
+:root{
+  --bg:#07111f;
+  --bg2:#101b33;
+  --glass:rgba(255,255,255,.085);
+  --glass-strong:rgba(255,255,255,.13);
+  --border:rgba(255,255,255,.16);
+  --text:#f7f9ff;
+  --muted:rgba(231,237,250,.68);
+  --primary:#8b5cf6;
+  --primary2:#6d28d9;
+  --danger:#ef4444;
+  --success:#22c55e;
+  --shadow:0 20px 60px rgba(0,0,0,.28);
+  --blur:22px;
+}
+
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg)}
+body{
+  margin:0;min-height:100vh;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--text);background:
+    linear-gradient(135deg,rgba(3,8,20,.38),rgba(7,17,31,.24)),
+    url("njc-background.png") center center / cover no-repeat fixed;
+  background-attachment:fixed;
+}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(120deg,transparent 0 40%,rgba(255,255,255,.018) 50%,transparent 60%);}
+
+#app{min-height:100vh}
+
+aside{
+  position:fixed;left:16px;top:16px;bottom:16px;width:230px;padding:20px 14px;
+  color:var(--text);border:1px solid var(--border);border-radius:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.055));
+  backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));box-shadow:var(--shadow);z-index:20;
+}
+aside h2{margin:2px 8px 22px;font-size:20px;letter-spacing:.2px}
+aside button{
+  display:block;width:100%;background:transparent;color:var(--muted);text-align:left;margin:5px 0;padding:12px 13px;
+  border:1px solid transparent;border-radius:14px;transition:.2s ease;font-weight:650;
+}
+aside button:hover,aside button.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.11);color:#fff;transform:translateX(2px)}
+
+main{margin-left:262px;padding:28px;max-width:1500px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:22px}
+.top h1,.top h2{margin:0}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.stats div,.card,.table,.login{
+  background:linear-gradient(135deg,rgba(255,255,255,.115),rgba(255,255,255,.055));
+  border:1px solid var(--border);box-shadow:var(--shadow);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));
+}
+.stats div,.card{border-radius:20px;padding:20px}
+.stats div{transition:.2s ease}
+.stats div:hover,.card:hover{border-color:rgba(255,255,255,.23)}
+.stats b{display:block;font-size:28px;color:#fff}
+.stats span,small,.upload-note,.sermon-count{display:block;color:var(--muted);margin-top:6px}
+
+.toolbar{display:flex;gap:12px;margin-bottom:16px}
+button{
+  border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;
+  border-radius:12px;padding:10px 15px;font-weight:750;cursor:pointer;box-shadow:0 8px 24px rgba(109,40,217,.24);transition:.2s ease;
+}
+button:hover{transform:translateY(-1px);filter:brightness(1.06)}
+button:active{transform:translateY(0) scale(.98)}
+.secondary{background:rgba(255,255,255,.08);color:#fff;box-shadow:none}
+.danger{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+
+.table{border-radius:20px;overflow:hidden}
+.row{padding:16px;border-bottom:1px solid rgba(255,255,255,.09);display:flex;justify-content:space-between;gap:15px;align-items:center}
+.row:last-child{border:0}.row button{align-self:center}
+
+input,textarea,select{
+  display:block;width:100%;padding:12px 14px;margin:9px 0;border:1px solid rgba(255,255,255,.14);border-radius:12px;font:inherit;
+  background:rgba(5,12,28,.48);color:#fff;outline:none;transition:.2s ease;
+}
+input::placeholder,textarea::placeholder{color:rgba(231,237,250,.43)}
+input:focus,textarea:focus,select:focus{border-color:rgba(167,139,250,.8);box-shadow:0 0 0 3px rgba(139,92,246,.14)}
+select option{background:#111827;color:#fff}
+.form{max-width:800px}.form label{font-size:13px;font-weight:700;color:var(--muted);display:block;margin-top:12px}.form textarea{min-height:120px}.form-actions{display:flex;gap:10px;margin-top:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+
+.login{max-width:420px;margin:10vh auto;padding:34px;border-radius:26px;text-align:center}
+.brand{font-size:60px;color:#a78bfa;text-shadow:0 0 35px rgba(139,92,246,.35)}
+.login small{margin-top:20px}
+.error{background:rgba(239,68,68,.14);border:1px solid rgba(248,113,113,.25);color:#fecaca;padding:11px;border-radius:12px;margin:10px 0}
+.badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:750;margin-top:8px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);color:#86efac}
+.badge.draft{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.24);color:#fcd34d}
+.actions{display:flex;gap:7px;align-items:center}.toast{position:fixed;right:24px;top:24px;z-index:9999;background:rgba(22,101,52,.9);border:1px solid rgba(255,255,255,.14);color:#fff;padding:13px 18px;border-radius:14px;box-shadow:var(--shadow);font-weight:700;backdrop-filter:blur(16px)}.toast.error{background:rgba(185,28,28,.92);color:#fff}.content-row{align-items:center}
+
+.toast-backdrop{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.58);backdrop-filter:blur(9px);padding:20px;opacity:0;transition:opacity .2s ease}
+.toast-backdrop.show{opacity:1}
+.toast-popup{width:min(92vw,440px);background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.07));border:1px solid var(--border);border-radius:22px;padding:24px 22px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;position:relative;transform:translateY(8px) scale(.98);transition:transform .2s ease;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.toast-backdrop.show .toast-popup{transform:translateY(0) scale(1)}
+.toast-icon{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);color:#86efac;font-size:24px;font-weight:900;flex:0 0 42px}.toast-popup.error .toast-icon{background:rgba(239,68,68,.15);border-color:rgba(248,113,113,.25);color:#fca5a5}
+.toast-text{display:flex;flex-direction:column;gap:4px;padding-right:20px}.toast-text strong{font-size:18px;color:#fff}.toast-text span{color:var(--muted);line-height:1.4}.toast-close{position:absolute;right:10px;top:8px;background:transparent;color:var(--muted);font-size:24px;padding:4px 8px;box-shadow:none}.toast-close:hover{background:rgba(255,255,255,.08)}.toast-popup.error .toast-close{color:#fca5a5}
+
+.sermon-admin-media{display:grid;gap:10px;margin-top:10px;max-width:420px}.sermon-thumb,.sermon-preview{width:min(100%,420px);max-height:260px;object-fit:cover;border-radius:16px;border:1px solid rgba(255,255,255,.12)}.sermon-admin-media audio,.form audio{width:min(100%,420px)}
+.sermon-tools{display:grid;grid-template-columns:1fr 200px;gap:12px;margin:18px 0 10px}.sermon-search{position:relative;display:flex;align-items:center}.sermon-search span{position:absolute;left:14px;font-size:18px;pointer-events:none}.sermon-search input{width:100%;box-sizing:border-box;padding:13px 15px 13px 44px}.sermon-tools select{width:100%;box-sizing:border-box;padding:13px 14px;cursor:pointer}
+.sermon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}.sermon-card{padding:0;overflow:hidden}.sermon-image-wrap{width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;background:rgba(255,255,255,.06)}.sermon-image{width:100%;height:100%;object-fit:cover;display:block}.sermon-image-error{width:100%;height:100%;align-items:center;justify-content:center;display:flex;color:var(--muted);background:rgba(255,255,255,.05)}
+
+@media(max-width:900px){aside{position:relative;left:auto;top:auto;bottom:auto;width:auto;margin:10px;display:flex;gap:5px;overflow:auto;padding:9px}aside h2{display:none}aside button{white-space:nowrap;width:auto;margin:0}main{margin:0;padding:16px}.top{flex-wrap:wrap}.sermon-tools{grid-template-columns:1fr}.toolbar{flex-direction:column}}
+@media(max-width:600px){main{padding:12px}.row{flex-direction:column;align-items:stretch}.actions{width:100%}.actions button{flex:1}.login{margin:6vh 14px;padding:26px}}
