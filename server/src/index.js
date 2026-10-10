@@ -4804,61 +4804,46 @@ ORDER BY
 );
 
 
+
 app.post(
   '/api/prayers',
-
   auth,
-
-  async (
-    req,
-    res
-  ) => {
-
+  async (req, res) => {
     try {
+      const p = req.body;
 
-      const p =
-        req.body;
+      const request = p.request || p.request_text || p.title;
 
+      if (!request) {
+        return res.status(400).json({
+          message: 'Prayer request is required'
+        });
+      }
 
-      const result =
-        await safe(
-          `
-            INSERT INTO prayer_requests
-            (
-              member_id,
-              title,
-              request_text,
-              is_anonymous,
-              status
-            )
-            VALUES
-            (?,?,?,?,?)
-          `,
-          [
-            reqUserId(req),
-            p.title,
-            p.request_text,
-            !!p.is_anonymous,
-            'new'
-          ]
-        );
+      const result = await safe(
+        `INSERT INTO prayer_requests
+          (member_id, name, request, status)
+         VALUES (?, ?, ?, ?)`,
+        [
+          reqUserId(req),
+          p.name || p.full_name || 'Member',
+          request,
+          'new'
+        ]
+      );
 
-
-      res.json({
-        id:
-          result.insertId
+      res.status(201).json({
+        id: result.insertId
       });
-
     } catch (e) {
-
+      console.error('POST /api/prayers error:', e);
       res.status(500).json({
         message: e.message
       });
-
     }
-
   }
 );
+
 
 
 function reqUserId(req) {
