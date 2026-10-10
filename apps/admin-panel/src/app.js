@@ -1,9 +1,130 @@
-const API=localStorage.API_URL||`${window.location.protocol}//${window.location.hostname}:3000/api`;let token=localStorage.adminToken||'';const app=document.querySelector('#app');const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const API = 'https://njc-church-management.onrender.com/api';let token=localStorage.adminToken||'';const app=document.querySelector('#app');const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(path,opt={}){opt.headers={...(opt.body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{}),...(opt.headers||{})};const r=await fetch(API+path,opt);const x=await r.json().catch(()=>({}));if(r.status===401){token='';localStorage.removeItem('adminToken');throw Error('Unauthorized')}if(!r.ok)throw Error(x.message||'Request failed');return x}
 function toast(msg,type='success'){const d=document.createElement('div');d.className='toast '+type;d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2800)}
-function loginPage(msg=''){app.innerHTML=`<div class="login"><div class="brand">♱</div><h1>NJC Church</h1><p>Admin Panel</p>${msg?`<div class="error">${esc(msg)}</div>`:''}<input id="u" placeholder="Username" value="admin"><input id="p" type="password" placeholder="Password"><button onclick="doLogin()">Sign in</button></div>`}
-async function doLogin(){try{const x=await api('/auth/admin/login',{method:'POST',body:JSON.stringify({username:u.value,password:p.value})});token=x.token;localStorage.adminToken=token;dashboard()}catch(e){loginPage(e.message)}}
-function shell(active,body){app.innerHTML=`<aside><h2>NJC Admin</h2><button onclick="dashboard()">📊 Dashboard</button><button onclick="members()">👥 Members</button><button onclick="content()">📢 Content</button><button onclick="prayers()">🙏 Prayer</button><button onclick="expenses()">💰 Expenses</button><button onclick="logout()">↪ Logout</button></aside><main><div class="top"><b>${active}</b><span>Church Management</span></div>${body}</main>`}
+let adminOtpMobile = '';
+let adminSelectionToken = '';
+
+function loginPage(msg = '') {
+  app.innerHTML = `
+    <div class="login">
+      <div class="brand">♱</div>
+      <h1>NJC Church</h1>
+      <p>Admin Panel</p>
+      ${msg ? `<div class="error">${esc(msg)}</div>` : ''}
+      <input id="adminMobile" type="tel"
+        placeholder="Registered mobile number"
+        autocomplete="tel" />
+      <button onclick="requestAdminOtp()">Send OTP</button>
+      <div id="adminOtpSection" style="display:none">
+        <input id="adminOtp" type="text" inputmode="numeric"
+          autocomplete="one-time-code" placeholder="Enter OTP" />
+        <button onclick="verifyAdminOtp()">Verify OTP</button>
+      </div>
+    </div>`;
+}
+
+async function requestAdminOtp() {
+  const mobile = document.querySelector('#adminMobile')?.value.trim();
+  if (!mobile) return loginPage('Enter your registered mobile number.');
+
+  try {
+    const response = await fetch(`${API}/auth/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'Unable to request OTP.');
+
+    adminOtpMobile = mobile;
+    loginPage('OTP requested. Check your configured delivery method.');
+    document.querySelector('#adminMobile').value = mobile;
+    document.querySelector('#adminOtpSection').style.display = 'block';
+  } catch (error) {
+    loginPage(error.message || 'Unable to request OTP.');
+  }
+}
+
+async function verifyAdminOtp() {
+  const otp = document.querySelector('#adminOtp')?.value.trim();
+  if (!otp) return loginPage('Enter the OTP.');
+
+  try {
+    const response = await fetch(`${API}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile: adminOtpMobile, otp })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'OTP verification failed.');
+
+    if (data.requiresRoleSelection) {
+      adminSelectionToken = data.selectionToken;
+      showAdminRoleChoices(data.accounts || []);
+      return;
+    }
+
+    if (data.role === 'admin' && data.token) {
+      token = data.token;
+      localStorage.adminToken = token;
+      dashboard();
+      return;
+    }
+
+    loginPage('This mobile number does not have an Admin account.');
+  } catch (error) {
+    loginPage(error.message || 'OTP verification failed.');
+  }
+}
+
+function showAdminRoleChoices(accounts) {
+  app.innerHTML = `
+    <div class="login">
+      <div class="brand">♱</div>
+      <h1>Choose Profile</h1>
+      <p>Select Admin to continue to the Admin Panel.</p>
+      ${accounts.map(account => `
+        <button onclick="selectAdminRole('${esc(account.role)}')">
+          ${esc(account.role)} — ${esc(account.name || account.role)}
+        </button>
+      `).join('')}
+    </div>`;
+}
+
+async function selectAdminRole(role) {
+  if (role !== 'admin') {
+    loginPage('Please select Admin to open the Admin Panel.');
+    return;
+  }
+  if (!adminSelectionToken) {
+    loginPage('Your role-selection session expired. Please sign in again.');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API}/auth/select-role`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        selectionToken: adminSelectionToken,
+        role: 'admin'
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'Unable to select Admin.');
+
+    if (data.role !== 'admin' || !data.token) {
+      throw new Error('The server did not return an Admin session.');
+    }
+
+    adminSelectionToken = '';
+    token = data.token;
+    localStorage.adminToken = token;
+    dashboard();
+  } catch (error) {
+    loginPage(error.message || 'Admin sign-in failed.');
+  }
+}function shell(active,body){app.innerHTML=`<aside><h2>NJC Admin</h2><button onclick="dashboard()">📊 Dashboard</button><button onclick="members()">👥 Members</button><button onclick="content()">📢 Content</button><button onclick="prayers()">🙏 Prayer</button><button onclick="expenses()">💰 Expenses</button><button onclick="logout()">↪ Logout</button></aside><main><div class="top"><b>${active}</b><span>Church Management</span></div>${body}</main>`}
 async function dashboard(){try{const x=await api('/dashboard');shell('Dashboard',`<div class="stats"><div><b>${x.members}</b><span>Active Members</span></div><div><b>${x.events}</b><span>Published Events</span></div><div><b>${x.pending_prayers}</b><span>Pending Prayers</span></div><div><b>₹${x.total_expenses.toFixed(2)}</b><span>Total Expenses</span></div><div><b>₹${x.current_balance.toFixed(2)}</b><span>Current Balance</span></div></div><div class="card"><h2>Quick Actions</h2><button onclick="addMember()">+ Add Member</button> <button onclick="addExpense()">+ Add Expense</button> <button onclick="addContent('announcements')">+ Announcement</button></div>`)}catch(e){loginPage(e.message)}}
 async function members(){const x=await api('/members');shell('Members',`<div class="toolbar"><input id="search" placeholder="Search name, phone, ID, area..." oninput="searchMembers()"><button onclick="addMember()">+ Add Member</button></div><div id="mlist">${memberRows(x)}</div>`)}
 function memberRows(x){return `<div class="table">${x.map(m=>`<div class="row"><div><b>${esc(m.full_name)}</b><small>${esc(m.member_id||'')} • ${esc(m.mobile||'')}</small><small>${esc(m.area||'')} ${esc(m.city||'')} • ${esc(m.status)}</small></div><div><button onclick="viewMember(${m.id})">View Details</button><button onclick="editMember(${m.id})">Edit</button>${m.map_url?`<a target="_blank" rel="noopener" href="${esc(m.map_url)}">📍 Google Maps</a>`:''}</div></div>`).join('')||'<p>No members.</p>'}</div>`}
