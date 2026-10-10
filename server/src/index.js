@@ -5346,24 +5346,33 @@ async function ensureContentSchema() {
   );
 
 
-  await ensureContentTable(
-    'bible_verses',
-    `
-      CREATE TABLE IF NOT EXISTS bible_verses(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        reference_name VARCHAR(255) NULL,
-        verse_text TEXT NULL,
-        status VARCHAR(30) DEFAULT 'published',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `,
-    {
-      reference_name: 'VARCHAR(255) NULL',
-      verse_text: 'TEXT NULL',
-      status: "VARCHAR(30) DEFAULT 'published'",
-      created_at: 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
-    }
-  );
+ 
+await ensureContentTable(
+  'bible_verses',
+  `
+    CREATE TABLE IF NOT EXISTS bible_verses(
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      reference_name VARCHAR(255) NULL,
+      verse_reference VARCHAR(255) NULL,
+      verse_text TEXT NULL,
+      status VARCHAR(30) DEFAULT 'published',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  {
+    reference_name: 'VARCHAR(255) NULL',
+    verse_reference: 'VARCHAR(255) NULL',
+    verse_text: 'TEXT NULL',
+    status: "VARCHAR(30) DEFAULT 'published'",
+    created_at: 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
+  }
+);
+
+await safe(`
+  ALTER TABLE bible_verses
+  ADD COLUMN IF NOT EXISTS verse_reference VARCHAR(255) NULL
+`);
+
 
 
   await ensureContentTable(
