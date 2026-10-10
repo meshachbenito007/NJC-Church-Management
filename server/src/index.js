@@ -961,89 +961,56 @@ app.post(
    LEGACY MEMBER REGISTRATION
 ========================================================================== */
 
+
 app.post(
   '/api/auth/member/register',
-  async (
-    req,
-    res
-  ) => {
+  async (req, res) => {
+    try {
+      const m = req.body;
 
-    const m =
-      req.body;
+      if (!m.full_name || !m.mobile) {
+        return res.status(400).json({
+          message: 'Name and mobile required'
+        });
+      }
 
-    if (
-      !m.full_name ||
-      !m.mobile
-    ) {
-
-      return res.status(400).json({
-        message:
-          'Name and mobile required'
-      });
-
-    }
-
-    const exists =
-      await safe(
-        `
-          SELECT id
-          FROM members
-          WHERE mobile=?
-        `,
+      const exists = await safe(
+        `SELECT id FROM members WHERE mobile = ?`,
         [m.mobile]
       );
 
-    if (exists.length) {
+      if (exists.length) {
+        return res.status(409).json({
+          message: 'Mobile already registered'
+        });
+      }
 
-      return res.status(409).json({
-        message:
-          'Mobile already registered'
+      const x = await safe(
+        `INSERT INTO members
+          (name, mobile, address, date_of_birth, gender, map_url, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          m.full_name || m.name || '',
+          m.mobile,
+          m.address || null,
+          m.dob || m.date_of_birth || null,
+          m.sex || m.gender || null,
+          m.map_url || null,
+          'active'
+        ]
+      );
+
+      res.status(201).json({
+        id: x.insertId
       });
-
+    } catch (e) {
+      console.error('Member registration error:', e);
+      res.status(500).json({
+        message: e.message
+      });
     }
-
-    const id =
-      'NJC-' +
-      Date.now()
-        .toString()
-        .slice(-8);
-
-   
-    const x = await safe(
-      `
-        INSERT INTO members
-        (
-          name,
-          mobile,
-          address,
-          date_of_birth,
-          gender,
-          map_url,
-          status
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        m.full_name || m.name || '',
-        m.mobile || '',
-        m.address || null,
-        m.dob || m.date_of_birth || null,
-        m.sex || m.gender || null,
-        m.map_url || null,
-        'active'
-      ]
-    );
-
-    res.json({
-      id: x.insertId
-    });
-
-  } catch (e) {
-    res.status(500).json({
-      message: e.message
-    });
   }
-});
+);
 
 
 
