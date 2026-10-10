@@ -4873,53 +4873,37 @@ function reqUserId(req) {
 }
 
 
+
 app.put(
   '/api/prayers/:id',
-
   auth,
   admin,
-
-  async (
-    req,
-    res
-  ) => {
-
+  async (req, res) => {
     try {
+      const status = req.body.status || 'new';
+      const notes = req.body.response_text || null;
 
       await safe(
-        `
-          UPDATE prayer_requests
-
-          SET
-            status=?,
-            response_text=?,
-            assigned_to=?
-
-          WHERE id=?
-        `,
+        `UPDATE prayer_requests
+         SET status = ?, admin_notes = ?
+         WHERE id = ?`,
         [
-          req.body.status || 'new',
-          req.body.response_text || null,
-          req.body.assigned_to || null,
+          status,
+          notes,
           req.params.id
         ]
       );
 
-
-      res.json({
-        ok: true
-      });
-
+      res.json({ ok: true });
     } catch (e) {
-
+      console.error('PUT /api/prayers/:id error:', e);
       res.status(500).json({
         message: e.message
       });
-
     }
-
   }
 );
+
 
 
 /* ==========================================================================
