@@ -1321,82 +1321,43 @@ app.post(
 );
 
 
+
 app.put(
   '/api/members/:id',
   auth,
   admin,
-  async (
-    req,
-    res
-  ) => {
-
+  async (req, res) => {
     try {
-
-      const m =
-        req.body;
+      const m = req.body;
 
       await safe(
-        `
-          UPDATE members SET
-
-            full_name=?,
-            mobile=?,
-            dob=?,
-            sex=?,
-            address=?,
-            house_no=?,
-            street=?,
-            area=?,
-            city=?,
-            district=?,
-            state=?,
-            pin=?,
-            latitude=?,
-            longitude=?,
-            map_url=?,
-            status=?,
-            ministry=?,
-            notes=?
-
-          WHERE id=?
-        `,
+        `UPDATE members SET
+          name = ?,
+          mobile = ?,
+          address = ?,
+          date_of_birth = ?,
+          gender = ?,
+          map_url = ?
+        WHERE id = ?`,
         [
-          m.full_name,
-          m.mobile,
-          m.dob || null,
-          m.sex || null,
+          m.full_name || m.name || '',
+          m.mobile || '',
           m.address || null,
-          m.house_no || null,
-          m.street || null,
-          m.area || null,
-          m.city || null,
-          m.district || null,
-          m.state || null,
-          m.pin || null,
-          m.latitude || null,
-          m.longitude || null,
+          m.dob || m.date_of_birth || null,
+          m.sex || m.gender || null,
           m.map_url || null,
-          m.status || 'active',
-          m.ministry || null,
-          m.notes || null,
           req.params.id
         ]
       );
 
-      res.json({
-        ok: true
-      });
-
+      res.json({ ok: true });
     } catch (e) {
-
-      res.status(500).json({
-        message: e.message
-      });
-
+      console.error('PUT /api/members/:id error:', e);
+      res.status(500).json({ message: e.message });
     }
-
   }
 );
+
 
 
 app.delete(
