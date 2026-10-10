@@ -16,11 +16,11 @@ async function requestOtp(mobile) {
   const phone = String(mobile).replace(/\s+/g, '');
 
   // 2Factor expects an international phone number.
-  const internationalPhone = phone.startsWith('+')
+const internationalPhone = phone.startsWith('+')
+  ? phone.slice(1)
+  : phone.startsWith('91')
     ? phone
-    : phone.startsWith('91')
-      ? `+${phone}`
-      : `+91${phone}`;
+    : `91${phone}`;
 
   const url =
     `https://2factor.in/API/V1/${encodeURIComponent(apiKey)}` +
