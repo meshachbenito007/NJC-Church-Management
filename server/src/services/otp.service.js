@@ -34,7 +34,7 @@ const internationalPhone = phone.startsWith('+')
     String(data.Status).toLowerCase() !== 'success' ||
     !data.Details
   ) {
-    console.error('2Factor OTP request failed:', data.Status);
+    console.log('2Factor OTP response:', {   status: data.Status,   details: typeof data.Details === 'string'     ? data.Details.replace(/\d{6}/g, '[REDACTED]')     : data.Details });
     throw new Error('Unable to send OTP. Please try again.');
   }
 
