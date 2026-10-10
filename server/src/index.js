@@ -11,7 +11,7 @@ require('dotenv').config();
 const pool = require('./db');
 
 const {
-  issueOtp,
+  requestOtp,
   verifyOtp
 } = require('./services/otp.service');
 
