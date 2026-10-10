@@ -605,7 +605,7 @@ app.post(
         });
       }
 
-      issueOtp(mobile);
+      await requestOtp(mobile);
 
       res.json({
         message: 'OTP sent'
