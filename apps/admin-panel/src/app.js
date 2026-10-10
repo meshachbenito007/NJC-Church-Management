@@ -1,4 +1,6 @@
-const API=localStorage.API_URL||`${window.location.protocol}//${window.location.hostname}:3000/api`;let token=localStorage.adminToken||'';const app=document.querySelector('#app');const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const API = 'https://njc-church-management.onrender.com/api';
+let token=localStorage.adminToken||'';const app=document.querySelector('#app');const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(path,opt={}){opt.headers={...(opt.body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{}),...(opt.headers||{})};const r=await fetch(API+path,opt);const x=await r.json().catch(()=>({}));if(r.status===401){token='';localStorage.removeItem('adminToken');throw Error('Unauthorized')}if(!r.ok)throw Error(x.message||'Request failed');return x}
 function toast(msg,type='success'){const d=document.createElement('div');d.className='toast '+type;d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2800)}
 function loginPage(msg=''){app.innerHTML=`<div class="login"><div class="brand">♱</div><h1>NJC Church</h1><p>Admin Panel</p>${msg?`<div class="error">${esc(msg)}</div>`:''}<input id="u" placeholder="Username" value="admin"><input id="p" type="password" placeholder="Password"><button onclick="doLogin()">Sign in</button></div>`}
