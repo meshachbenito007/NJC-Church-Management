@@ -1094,6 +1094,67 @@ app.post(
 /* ==========================================================================
    DASHBOARD
 ========================================================================== */
+app.get(
+  '/api/dashboard',
+  auth,
+  admin,
+  async (req, res) => {
+    try {
+      const [
+        members,
+        events,
+        prayers,
+        expenses,
+        settings
+      ] = await Promise.all([
+        safe(`
+          SELECT COUNT(*) AS total
+          FROM members
+          WHERE status = 'active'
+        `),
+        safe(`
+          SELECT COUNT(*) AS total
+          FROM events
+          WHERE status = 'published'
+        `),
+        safe(`
+          SELECT COUNT(*) AS total
+          FROM prayer_requests
+          WHERE status <> 'completed'
+        `),
+        safe(`
+          SELECT COALESCE(SUM(amount), 0) AS total
+          FROM expenses
+        `),
+        safe(`
+          SELECT starting_balance
+          FROM finance_settings
+          LIMIT 1
+        `)
+      ]);
+
+      const totalExpenses =
+        Number(expenses[0]?.total || 0);
+
+      const startingBalance =
+        Number(settings[0]?.starting_balance || 0);
+
+      res.json({
+        members: Number(members[0]?.total || 0),
+        events: Number(events[0]?.total || 0),
+        pending_prayers: Number(prayers[0]?.total || 0),
+        total_expenses: totalExpenses,
+        current_balance: startingBalance - totalExpenses
+      });
+    } catch (error) {
+      console.error('GET /api/dashboard error:', error);
+
+      res.status(500).json({
+        message: error.message
+      });
+    }
+  }
+);
 
 /* ==========================================================================
    MEMBERS
