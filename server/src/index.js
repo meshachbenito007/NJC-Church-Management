@@ -646,7 +646,7 @@ app.post(
         });
       }
 
-      if (!verifyOtp(mobile, otp)) {
+      if (!(await verifyOtp(mobile, otp))) {{
         return res.status(400).json({
           message: 'Invalid or expired OTP'
         });
