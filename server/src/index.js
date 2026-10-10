@@ -1008,65 +1008,43 @@ app.post(
         .toString()
         .slice(-8);
 
-    const x =
-      await safe(
-        `
-          INSERT INTO members
-          (
-            member_id,
-            full_name,
-            mobile,
-            dob,
-            sex,
-            address,
-            house_no,
-            street,
-            area,
-            city,
-            district,
-            state,
-            pin,
-            latitude,
-            longitude,
-            map_url,
-            status
-          )
-          VALUES
-          (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        `,
-        [
-          id,
-          m.full_name,
-          m.mobile,
-          m.dob || null,
-          m.sex || null,
-          m.address || null,
-          m.house_no || null,
-          m.street || null,
-          m.area || null,
-          m.city || null,
-          m.district || null,
-          m.state || null,
-          m.pin || null,
-          m.latitude || null,
-          m.longitude || null,
-          m.map_url || null,
-          'active'
-        ]
-      );
+   
+    const x = await safe(
+      `
+        INSERT INTO members
+        (
+          name,
+          mobile,
+          address,
+          date_of_birth,
+          gender,
+          map_url,
+          status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        m.full_name || m.name || '',
+        m.mobile || '',
+        m.address || null,
+        m.dob || m.date_of_birth || null,
+        m.sex || m.gender || null,
+        m.map_url || null,
+        'active'
+      ]
+    );
 
     res.json({
-
-      id:
-        x.insertId,
-
-      member_id:
-        id
-
+      id: x.insertId
     });
 
+  } catch (e) {
+    res.status(500).json({
+      message: e.message
+    });
   }
-);
+});
+
 
 
 /* ==========================================================================
