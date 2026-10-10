@@ -4903,18 +4903,14 @@ app.get(
         await safe(
           `
             SELECT
-
-              p.*,
-
-              m.full_name
-
-            FROM prayer_requests p
-
-            LEFT JOIN members m
-              ON m.id=p.member_id
-
-            ORDER BY
-              p.created_at DESC
+  p.*,
+  p.name AS full_name,
+  p.request AS request_text,
+  p.admin_notes AS response_text,
+  0 AS is_anonymous
+FROM prayer_requests p
+ORDER BY
+  p.created_at DESC
           `
         )
       );
