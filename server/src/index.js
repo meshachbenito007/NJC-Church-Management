@@ -613,10 +613,10 @@ app.post(
 
     } catch (e) {
 
-      console.error(
-        'POST /api/auth/request-otp error:',
-        e
-      );
+     console.error(
+  'POST /api/auth/request-otp error:',
+  e.message
+);
 
       res.status(500).json({
         message: e.message
