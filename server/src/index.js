@@ -1170,7 +1170,7 @@ app.get(
   ) => {
 
     let sql =
-      'SELECT * FROM members WHERE 1=1';
+      'SELECT *, name AS full_name, date_of_birth AS dob, gender AS sex FROM members WHERE 1=1';
 
     const args = [];
 
@@ -1211,7 +1211,7 @@ app.get(
     }
 
     sql +=
-      ' ORDER BY full_name';
+      ' ORDER BY name';
 
     try {
 
